@@ -26,7 +26,7 @@ async def custome_http_excption_handler(request:Request, exc:HTTPException):
             }
     )                                                                                                                                                                                                                                                                                                                                                                                                                       
      
-# app.add_middleware(AllowedIPsMiddleware)
+app.add_middleware(AllowedIPsMiddleware)
 
 app.add_middleware(
     CORSMiddleware, 
