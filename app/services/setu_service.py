@@ -7,10 +7,8 @@ from dateutil.relativedelta import relativedelta
 from dateutil import tz
 from fastapi import HTTPException
 
-
 # Setup logging
 logger = logging.getLogger(__name__)
-
 
 def setu_login(payload: dict, headers: dict = None):
     required_fields = ["clientID", "grant_type", "secret"]
@@ -36,8 +34,7 @@ def setu_login(payload: dict, headers: dict = None):
             json=payload,
             timeout=10,
         )
-
-
+        
         if response.status_code >= 400:
             error_data = response.json()
             error_msg = error_data.get("message") or error_data.get("error") or str(error_data)

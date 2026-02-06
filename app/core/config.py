@@ -14,8 +14,9 @@ class Settings:
     # Default to localhost for development if not specified
     ALLOWED_IPS = os.getenv("ALLOWED_IPS", "127.0.0.1,::1").split(",")
     
-    # mTLS Settings
-        
+    # APP_CLIENT_SECRET = os.getenv("APP_CLIENT_SECRET","" )
+
+    REDIS_URL:str = "redis://localhost:6379"        
 settings = Settings()
 
     

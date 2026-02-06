@@ -1,22 +1,12 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Depends
 from models.session import SessionRequest
 from services.setu_service import create_session, get_sessions
+from fastapi_limiter.depends import RateLimiter
 
 router = APIRouter()
 
-from fastapi.responses import JSONResponse
 
-# def error_response(status_code: int, message: str):
-#     return JSONResponse(
-#         status_code=status_code,
-#         content={
-#             "status": False,
-#             "status_code": status_code,
-#             "error": message
-#         }
-#     )
- 
-@router.post("/sessions", status_code=201)
+@router.post("/sessions", status_code=201, dependencies=[Depends(RateLimiter(times = 10, seconds =60))])
 async def create_new_session(
     request_body: SessionRequest,
     authorization: str = Header(..., description="Setu authorization token"),
@@ -39,7 +29,7 @@ async def create_new_session(
         "msg": "Session created Successfully!!"
     }
 
-@router.get("/sessions/{session_id}")
+@router.get("/sessions/{session_id}", dependencies=[Depends(RateLimiter(times = 20, seconds = 60))])
 async def get_session_details(
     session_id: str,
     authorization: str = Header(...),

@@ -1,22 +1,13 @@
-from fastapi import APIRouter, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Header,Depends,  HTTPException, Query, Request
 from models.consent import ConsentRequest
 from services.setu_service import create_consent, get_consent
-
+from fastapi_limiter.depends import RateLimiter 
+# from fastapi.responses import JSONResponse
 from typing import Optional
 
 router = APIRouter()
 
-from fastapi.responses import JSONResponse
 
-# def error_response(status_code: int, message: str):
-#     return JSONResponse(
-#         status_code=status_code,
-#         content={
-#             "status": False,
-#             "status_code": status_code,
-#             "error": message
-#         }
-#     )
 
 # @router.post("/consents")
 # async def create_new_consent(
@@ -107,7 +98,7 @@ from fastapi.responses import JSONResponse
 #             f"Failed to fetch consent: {str(e)}"
 #         )
 
-@router.post("/consents", status_code=201)
+@router.post("/consents", status_code=201, dependencies=[Depends(RateLimiter(times = 10, seconds = 60))])
 async def create_new_consent(
     request_body: ConsentRequest,
     authorization: str = Header(...),
@@ -127,7 +118,7 @@ async def create_new_consent(
     }
 
 
-@router.get("/consent/{consent_id}")
+@router.get("/consent/{consent_id}", dependencies=[Depends(RateLimiter(times = 20, seconds = 60))])
 async def get_consent_details(consent_id: str,x_product_instance_id: str = Header(..., alias = "x-product-instance-id"), authorization: str = Header(...) ):
     headers = {"Authorization":authorization, "x-product-instance-id":x_product_instance_id }
     data = get_consent(consent_id, False,headers)

@@ -1,10 +1,31 @@
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from services.setu_service import setu_login
-
+from core.config import settings
+import jwt
+from fastapi_limiter.depends import RateLimiter
 router = APIRouter()
+
+# async def verify_token(authorization: str = Header(...)):
+#     if not authorization.startswith("Bearer "):
+#         raise HTTPException(status_code=401,
+#                             detail = "Invalid token format")
+#     token =  authorization.split(" ")[1]
+#     try:
+#         payload = jwt.decode(
+#             token,
+#             settings.APP_CLIENT_SECRET,
+#             algorithms=["HS256"]
+#         )
+#         return payload
+    
+#     except jwt.ExpiredSignatureError as ex:
+#         raise HTTPException(status_code=401,detail = "Token has expired")
+
+#     except jwt.InvalidTokenError as ex:
+#         raise HTTPException(status_code=401,detail = "Invalid Token")
 
 
 class LoginRequest(BaseModel):
@@ -19,14 +40,11 @@ class LoginRequest(BaseModel):
 def validate_and_extract_headers(request: Request, payload: Dict) -> Dict:
     extracted_headers = {}
     
-    # Extract headers from HTTP request headers
     if request:
-        # Extract headers that client provided
         headers_to_include = ["content-type", "client"]
         for key, value in request.headers.items():
             key_lower = key.lower()
             if any(key_lower.startswith(h) for h in headers_to_include):
-                # Validate header value is not empty
                 if not value or not str(value).strip():
                     raise HTTPException(
                         status_code=400,
@@ -34,7 +52,6 @@ def validate_and_extract_headers(request: Request, payload: Dict) -> Dict:
                     )
                 extracted_headers[key] = value
     
-    # If no client header provided in request, check in payload
     if "client" not in extracted_headers and "client" in payload:
         client_value = payload.get("client")
         if not client_value or not str(client_value).strip():
@@ -45,18 +62,15 @@ def validate_and_extract_headers(request: Request, payload: Dict) -> Dict:
         extracted_headers["client"] = client_value
         payload.pop("client")
     
-    # Validate client header exists
     if "client" not in extracted_headers:
         raise HTTPException(
             status_code=400,
             detail="Missing required header: 'client'"
         )
     
-    # Ensure Content-Type is always application/json
     if "content-type" not in extracted_headers and "Content-Type" not in extracted_headers:
         extracted_headers["Content-Type"] = "application/json"
     else:
-        # Validate if content-type was provided
         provided_content_type = extracted_headers.get("content-type") or extracted_headers.get("Content-Type")
         if "json" not in provided_content_type.lower():
             raise HTTPException(
@@ -66,17 +80,7 @@ def validate_and_extract_headers(request: Request, payload: Dict) -> Dict:
     
     return extracted_headers
 
-def error_response(status_code: int, message: str):
-    return JSONResponse(
-        status_code=status_code,
-        content={
-            "status": False,
-            "status_code": status_code,
-            "error": message
-        }
-    )
-
-@router.post("/setu/login", status_code=201)
+@router.post("/setu/login", status_code=201, dependencies=[Depends(RateLimiter(times = 5, seconds =60))])
 async def login(request_body: LoginRequest, request: Request):
     payload = request_body.model_dump()
     extracted_headers = validate_and_extract_headers(request, payload)

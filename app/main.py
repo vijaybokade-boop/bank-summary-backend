@@ -8,12 +8,26 @@ from core.security.ip_middleware import AllowedIPsMiddleware
 # from core.security.mtls_middleware import MTLSMiddleware
 from core.config import settings
 import logging
+import redis.asyncio as redis
+from fastapi_limiter import FastAPILimiter
+from contextlib import asynccontextmanager
+
 # Configure logging
 logging.basicConfig(level = logging.DEBUG,
                     format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
+@asynccontextmanager
+async def lifespan(app = FastAPI):
+    redis_connection = redis.from_url(
+        settings.REDIS_URL,
+        encoding = "utf-8",
+        decode_responses = True
+    )
+    await FastAPILimiter.init(redis_connection)
+    yield
+    FastAPILimiter.close()
 
-app = FastAPI()
+app = FastAPI(lifespan = lifespan)
 
 @app.exception_handler(HTTPException)
 async def custome_http_excption_handler(request:Request, exc:HTTPException):
