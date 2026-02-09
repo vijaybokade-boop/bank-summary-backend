@@ -5,6 +5,7 @@ from api.endpoints.setu_auth import router as setu_router
 from api.endpoints.consent import router as consent_router
 from api.endpoints.session import router as session_router
 from core.security.ip_middleware import AllowedIPsMiddleware
+from core.security.idempotency_middleware import IdempotencyMiddleware
 # from core.security.mtls_middleware import MTLSMiddleware
 from core.config import settings
 import logging
@@ -40,8 +41,8 @@ async def custome_http_excption_handler(request:Request, exc:HTTPException):
             }
     )                                                                                                                                                                                                                                                                                                                                                                                                                       
      
+app.add_middleware(IdempotencyMiddleware)
 app.add_middleware(AllowedIPsMiddleware)
-
 app.add_middleware(
     CORSMiddleware, 
     allow_origins = settings.ALLOWED_IPS,

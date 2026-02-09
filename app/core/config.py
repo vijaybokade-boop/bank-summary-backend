@@ -15,8 +15,13 @@ class Settings:
     ALLOWED_IPS = os.getenv("ALLOWED_IPS", "127.0.0.1,::1").split(",")
     
     # APP_CLIENT_SECRET = os.getenv("APP_CLIENT_SECRET","" )
+    #redis-url 
+    REDIS_URL = os.getenv("REDIS_URL")        
 
-    REDIS_URL:str = "redis://localhost:6379"        
+    #idempotency settings
+    IDEMPOTENCY_TTL = os.getenv("IDEMPOTENCY_TTL")
+    IDEMPOTENCY_LOCK_TTL = os.getenv("IDEMPOTENCY_LOCK_TTL")
+
 settings = Settings()
 
     
