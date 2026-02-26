@@ -73,7 +73,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     return JSONResponse(
                         status_code= cached_data["status_code"],
                         content=cached_data["body"],
-                        headers = {"X-Idempotecy-Cached":"true"}
+                        headers = {"X-Idempotency-Cached":"true"}
                     )
                 
             await redis_client.setex(

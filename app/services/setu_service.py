@@ -95,7 +95,7 @@ def create_consent(payload: dict, headers: dict):
         }
         response = requests.post(
             settings.SETU_CONSENT_URL,
-            headers=new_headers,   # ✅ FIXED
+            headers=new_headers,   # FIXED
             json=json_payload,
             timeout=10,
         )

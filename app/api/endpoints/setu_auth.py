@@ -5,28 +5,9 @@ from typing import Optional, Dict, Any
 from services.setu_service import setu_login
 from core.config import settings
 import jwt
+from core.security.auth import get_current_user
 from fastapi_limiter.depends import RateLimiter
 router = APIRouter()
-
-# async def verify_token(authorization: str = Header(...)):
-#     if not authorization.startswith("Bearer "):
-#         raise HTTPException(status_code=401,
-#                             detail = "Invalid token format")
-#     token =  authorization.split(" ")[1]
-#     try:
-#         payload = jwt.decode(
-#             token,
-#             settings.APP_CLIENT_SECRET,
-#             algorithms=["HS256"]
-#         )
-#         return payload
-    
-#     except jwt.ExpiredSignatureError as ex:
-#         raise HTTPException(status_code=401,detail = "Token has expired")
-
-#     except jwt.InvalidTokenError as ex:
-#         raise HTTPException(status_code=401,detail = "Invalid Token")
-
 
 class LoginRequest(BaseModel):
     """Dynamic login request - client provides all data."""
@@ -81,7 +62,7 @@ def validate_and_extract_headers(request: Request, payload: Dict) -> Dict:
     return extracted_headers
 
 @router.post("/setu/login", status_code=201, dependencies=[Depends(RateLimiter(times = 5, seconds =60))])
-async def login(request_body: LoginRequest, request: Request):
+async def login(request_body: LoginRequest, request: Request, current_user: str = Depends(get_current_user)):
     payload = request_body.model_dump()
     extracted_headers = validate_and_extract_headers(request, payload)
     data = setu_login(payload, extracted_headers)
@@ -91,66 +72,6 @@ async def login(request_body: LoginRequest, request: Request):
         "data": data,
         "msg": "Token generated Successfully!!"
     }
-
-
-# @router.post("/setu/login")
-# async def login(
-#     request_body: LoginRequest,
-#     request: Request
-# ):
-#     # Convert request body to dict
-#     payload = request_body.model_dump(exclude_none=False)
-#     try:
-#         extracted_headers = validate_and_extract_headers(request, payload)
-#     except HTTPException as e:
-#         return error_response(
-#             e.status_code,
-#             e.detail
-#         )
-#     except Exception as e:
-#         return error_response(
-#             400,
-#             f"Header validation error: {str(e)}"
-#         )
-
-#     # Validate required payload fields
-#     if not payload.get("clientID") or not str(payload.get("clientID")).strip():
-#         return error_response(
-#             400,
-#             "Missing or empty required field: clientID"
-#         )
-
-#     if not payload.get("grant_type") or not str(payload.get("grant_type")).strip():
-#         return error_response(
-#             400,
-#             "Missing or empty required field: grant_type"
-#         )
-
-#     if not payload.get("secret") or not str(payload.get("secret")).strip():
-#         return error_response(
-#             400,
-#             "Missing or empty required field: secret"
-#         )
-
-#     # Call Setu login service
-#     try:
-#         result = setu_login(payload, extracted_headers)
-
-#         # If service layer returns error
-#         if isinstance(result, dict) and "error" in result:
-#             return error_response(
-#                 result.get("status_code", 500),
-#                 result.get("error")
-#             )
-
-#         return result
-
-#     except Exception as e:
-#         return error_response(
-#             500,
-#             f"Login failed: {str(e)}"
-#         )
-
 
 
 

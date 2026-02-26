@@ -7,6 +7,7 @@ from api.endpoints.session import router as session_router
 from core.security.ip_middleware import AllowedIPsMiddleware
 from core.security.idempotency_middleware import IdempotencyMiddleware
 # from core.security.mtls_middleware import MTLSMiddleware
+from api.endpoints.auth import router as auth_router
 from core.config import settings
 import logging
 import redis.asyncio as redis
@@ -54,3 +55,5 @@ app.add_middleware(
 app.include_router(setu_router, prefix = "/api/v1",tags = ["Setu Integration"] )
 app.include_router(consent_router,prefix = "/api/v1", tags =["Consent Integration"])
 app.include_router(session_router, prefix = "/api/v1", tags =["session Integration"])
+app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])   # ← add this
+
